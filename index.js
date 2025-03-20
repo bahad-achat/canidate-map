@@ -34,8 +34,12 @@ const initMap = async () => {
 
 const dynamicMap = async () => {
   const schools = await getSchoolsFromExcel();
-  schools.forEach(async (school) => {
+  let requestCount = 0;
+
+  for (const school of schools) {
     const cords = await getCordsFromAddress(school.address);
+    requestCount++;
+
     if (cords && cords.length > 0) {
       addMarker(cords, school);
       let line;
@@ -51,7 +55,13 @@ const dynamicMap = async () => {
 
       drawDashedLine();
     }
-  });
+
+    if (requestCount % 10 === 0) {
+      console.log(requestCount);
+      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
 };
 
 const getSchoolsFromExcel = async () => {
@@ -83,15 +93,16 @@ const getSchoolsFromExcel = async () => {
 
 const getCordsFromAddress = async (address) => {
   if (address === null) return;
-  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-    address
+  const api_key = "350683306027412334908x616";
+  const url = `https://geocode.xyz/${encodeURIComponent(address)}?json=1&auth=${encodeURIComponent(
+    api_key
   )}`;
 
   const response = await getData(url);
 
   try {
-    if (response.length > 0) {
-      return [response[0].lat, response[0].lon];
+    if (response && !response.error) {
+      return [response.latt, response.longt];
     } else {
       console.error("No results for " + address);
     }
@@ -108,7 +119,7 @@ const addMarker = (cords, school) => {
     statusColor = "red";
   } else if (school.status === "בדרך") {
     statusColor = "yellow";
-  } else if(school.status === "בדרך חזרה") {
+  } else if (school.status === "בדרך חזרה") {
     statusColor = "blue";
   }
 
