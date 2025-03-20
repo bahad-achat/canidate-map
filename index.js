@@ -1,5 +1,6 @@
 const BASE_CORDS = [30.65093635405422, 34.79744931815025];
 const map = L.map("map").setView([31.5, 34.8], 8);
+let schools = [];
 
 const initMap = async () => {
   L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
@@ -28,16 +29,41 @@ const initMap = async () => {
     .addTo(map)
     .bindPopup("Random Home Location");
 
-  await dynamicMap();
-  setInterval(dynamicMap, 30000);
+  dynamicMap();
+  setInterval(refreshSchoolsStatus, 30000);
+};
+
+const refreshSchoolsStatus = async () => {  
+  const updated = await getSchoolsFromExcel();
+
+  schools.forEach((school, index) => {
+    school.status = updated[index].status;
+
+    if (school.cords && school.cords.length > 0) {
+      addMarker(school.cords, school);
+      let line;
+      const drawDashedLine = () => {
+        if (line) {
+          map.removeLayer(line);
+        }
+        line = L.polyline([BASE_CORDS, school.cords], {
+          color: "blue",
+          dashArray: "5, 10",
+        }).addTo(map);
+      };
+
+      drawDashedLine();
+    }
+  });
 };
 
 const dynamicMap = async () => {
-  const schools = await getSchoolsFromExcel();
+  schools = await getSchoolsFromExcel();
   let requestCount = 0;
 
   for (const school of schools) {
     const cords = await getCordsFromAddress(school.address);
+    school.cords = cords;
     requestCount++;
 
     if (cords && cords.length > 0) {
@@ -91,7 +117,7 @@ const getSchoolsFromExcel = async () => {
 
 const getCordsFromAddress = async (address) => {
   if (address === null) return;
-  const api_key = "350683306027412334908x616";
+  const api_key = "167523555576369e15994435x105694";
   const url = `https://geocode.xyz/${encodeURIComponent(address)}?json=1&auth=${encodeURIComponent(
     api_key
   )}`;
