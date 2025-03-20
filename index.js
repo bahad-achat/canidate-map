@@ -57,8 +57,6 @@ const dynamicMap = async () => {
     }
 
     if (requestCount % 10 === 0) {
-      console.log(requestCount);
-      
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
