@@ -11,12 +11,20 @@ html, body {
     height: 90vh;
 }
 
+#color-map {
+    display: flex;
+    align-content: center;
+    flex-wrap: wrap;
+    align-items: anchor-center;
+}
+
+
 .school-popup {
     direction: rtl;
     text-align: right;
 }
 
-#header {
+#header, p {
    margin-right: 0.5em;
    font-family: 'Trebuchet MS', sans-serif;
    align-self: center;

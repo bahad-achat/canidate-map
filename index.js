@@ -29,63 +29,36 @@ const initMap = async () => {
     .addTo(map)
     .bindPopup("Random Home Location");
 
-  dynamicMap();
+  schools = await getSchoolsFromExcel();
+
+  drawSchools();
   setInterval(refreshSchoolsStatus, 30000);
 };
 
-const refreshSchoolsStatus = async () => {  
-  const updated = await getSchoolsFromExcel();
-
-  schools.forEach((school, index) => {
-    school.status = updated[index].status;
-
+const drawSchools = () => {
+  schools.forEach((school) => {
     if (school.cords && school.cords.length > 0) {
       addMarker(school.cords, school);
       let line;
-      const drawDashedLine = () => {
-        if (line) {
-          map.removeLayer(line);
-        }
-        line = L.polyline([BASE_CORDS, school.cords], {
-          color: "blue",
-          dashArray: "5, 10",
-        }).addTo(map);
-      };
-
-      drawDashedLine();
+      if (line) {
+        map.removeLayer(line);
+      }
+      line = L.polyline([BASE_CORDS, school.cords], {
+        color: "blue",
+        dashArray: "5, 10",
+      }).addTo(map);
     }
   });
 };
 
-const dynamicMap = async () => {
-  schools = await getSchoolsFromExcel();
-  let requestCount = 0;
+const refreshSchoolsStatus = async () => {
+  const updated = await getSchoolsFromExcel();
 
-  for (const school of schools) {
-    const cords = await getCordsFromAddress(school.address);
-    school.cords = cords;
-    requestCount++;
+  schools.forEach((school, index) => {
+    school.status = updated[index].status;
+  });
 
-    if (cords && cords.length > 0) {
-      addMarker(cords, school);
-      let line;
-      const drawDashedLine = () => {
-        if (line) {
-          map.removeLayer(line);
-        }
-        line = L.polyline([BASE_CORDS, cords], {
-          color: "blue",
-          dashArray: "5, 10",
-        }).addTo(map);
-      };
-
-      drawDashedLine();
-    }
-
-    if (requestCount % 10 === 0) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-  }
+  drawSchools();
 };
 
 const getSchoolsFromExcel = async () => {
@@ -106,32 +79,13 @@ const getSchoolsFromExcel = async () => {
         schoolName: row.c[1]?.v || null,
         address: row.c[2]?.v || null,
         status: row.c[3]?.v || null,
+        cords: [...row.c[4]?.v.replace(" ", "").split(",")] || null,
       };
     });
 
     return schools;
   } catch (error) {
     console.error("Error fetching Google Sheets data:", error);
-  }
-};
-
-const getCordsFromAddress = async (address) => {
-  if (address === null) return;
-  const api_key = "167523555576369e15994435x105694";
-  const url = `https://geocode.xyz/${encodeURIComponent(address)}?json=1&auth=${encodeURIComponent(
-    api_key
-  )}`;
-
-  const response = await getData(url);
-
-  try {
-    if (response && !response.error) {
-      return [response.latt, response.longt];
-    } else {
-      console.error("No results for " + address);
-    }
-  } catch (error) {
-    console.error("Error fetching data", error);
   }
 };
 
