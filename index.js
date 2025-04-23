@@ -111,7 +111,7 @@ const addMarker = (cords, school) => {
   })
     .addTo(map)
     .bindPopup(
-      `<div class="school-popup">בית ספר: ${school.schoolName}<br>שנמצא בכתובת: ${school.address}<br>סטטוס: ${school.status}<br> מאוייש על ידי חוליה מספר ${school.serial}</div>`
+      `<div class="school-popup">כתובת: ${school.address}<br>סטטוס: ${school.status}<br> מאוייש על ידי חוליה מספר ${school.serial}</div>`
     );
 };
 
